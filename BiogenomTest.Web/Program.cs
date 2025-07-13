@@ -1,6 +1,9 @@
+using BiogenomTest.Application.Services;
 using BiogenomTest.Core.Abstraction;
 using BiogenomTest.Core.Domains;
+using BiogenomTest.DatabaseAccess;
 using BiogenomTest.DatabaseAccess.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace BiogenomTest.Web;
 
@@ -12,11 +15,24 @@ internal class Program
 
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+        
+        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MapperProfile>());
+
+        builder.Services.AddDbContext<NutritionDbContext>(options =>
+        {
+            options.UseNpgsql(builder.Configuration.GetConnectionString(nameof(NutritionDbContext)));   
+        });
+
         builder.Services.AddScoped<INutritionTestRepository, NutritionTestRepository>();
         builder.Services.AddScoped<IBaseRepository<NutritionCriterion>, NutritionCriterionRepository>();
-        builder.Services.AddScoped<IBaseRepository<NutritionTestResult>, NutritionTestResultRepository>();
+        builder.Services.AddScoped<INutritionTestResultRepository, NutritionTestResultRepository>();
+        builder.Services.AddScoped<NutritionTestService>();
+        
+        builder.Services.AddControllers();
 
         var app = builder.Build();
+        
+        app.MapControllers();
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
